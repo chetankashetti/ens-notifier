@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique @map("wallet_address")
+  email         String?
+  fid           String?   @unique
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  ensRecords    EnsRecord[]
+  
+  @@map("users")
+}
+
+model EnsRecord {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  ensName          String    @map("ens_name")
+  expiryDate       DateTime  @map("expiry_date")
+  notified         Boolean   @default(false)
+  lastNotifiedAt   DateTime? @map("last_notified_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, ensName])
+  @@map("ens_records")
+}

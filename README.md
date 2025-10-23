@@ -80,10 +80,23 @@ src/
 - [x] Responsive header with wallet connection
 - [x] Basic landing page with feature overview
 
+### ✅ Milestone 2: ENS Discovery & Expiry Calculation
+- [x] The Graph integration for ENS domain discovery
+- [x] ENS contract instances and expiry lookup logic
+- [x] ENS table component with color-coded expiry status
+- [x] Real-time domain fetching and expiry calculation
+- [x] API endpoint for ENS data testing
+- [x] Address verifier component for testing without wallet connection
+
+### ✅ Milestone 3: Database & Subscription System
+- [x] PostgreSQL database setup with Prisma ORM
+- [x] User management and ENS record storage
+- [x] Subscription API endpoints (POST, GET, DELETE)
+- [x] Email collection modal with validation
+- [x] Subscription status tracking and management
+- [x] Database schema with proper relationships and constraints
+
 ### 🚧 Upcoming Milestones
-- [ ] ENS domain discovery via The Graph
-- [ ] Expiry date calculation and display
-- [ ] Supabase database integration
 - [ ] Email notification system
 - [ ] Farcaster Mini App support
 
