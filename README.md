@@ -48,14 +48,24 @@ cp .env.example .env.local
 Edit `.env.local` and add your configuration:
 ```env
 NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id_here
+DATABASE_URL="postgresql://username:password@localhost:5432/ens-notifier?schema=public"
 ```
 
-4. Run the development server:
+4. Set up the database:
+```bash
+# Create PostgreSQL database
+createdb ens-notifier
+
+# Run database migrations
+npx prisma migrate dev --name init
+```
+
+5. Run the development server:
 ```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Project Structure
 
@@ -99,6 +109,16 @@ src/
 ### 🚧 Upcoming Milestones
 - [ ] Email notification system
 - [ ] Farcaster Mini App support
+
+## API Endpoints
+
+### ENS Data
+- `GET /api/ens?address=0x...` - Get ENS domains for an address
+
+### Subscriptions
+- `POST /api/subscribe` - Subscribe to domain notifications
+- `GET /api/subscribe?walletAddress=0x...` - Get user subscriptions
+- `DELETE /api/subscribe?walletAddress=0x...&ensName=domain.eth` - Unsubscribe
 
 ## Contributing
 
