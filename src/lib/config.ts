@@ -1,0 +1,16 @@
+export const config = {
+  privy: {
+    appId: process.env.NEXT_PUBLIC_PRIVY_APP_ID || '',
+  },
+  supabase: {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  },
+  email: {
+    resendApiKey: process.env.RESEND_API_KEY || '',
+  },
+  cron: {
+    secret: process.env.CRON_SECRET || '',
+  },
+} as const;
