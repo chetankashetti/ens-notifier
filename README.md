@@ -106,8 +106,15 @@ src/
 - [x] Subscription status tracking and management
 - [x] Database schema with proper relationships and constraints
 
+### ✅ Milestone 4: Automated Reminders (Cron Job + Notifications)
+- [x] Resend email service integration with React Email templates
+- [x] Automated cron job for checking expiring domains
+- [x] Email notification system with beautiful HTML templates
+- [x] Notification status tracking and duplicate prevention
+- [x] Test endpoints for email functionality
+- [x] Graceful handling of missing API keys (simulation mode)
+
 ### 🚧 Upcoming Milestones
-- [ ] Email notification system
 - [ ] Farcaster Mini App support
 
 ## API Endpoints
@@ -119,6 +126,11 @@ src/
 - `POST /api/subscribe` - Subscribe to domain notifications
 - `GET /api/subscribe?walletAddress=0x...` - Get user subscriptions
 - `DELETE /api/subscribe?walletAddress=0x...&ensName=domain.eth` - Unsubscribe
+
+### Email Notifications
+- `GET /api/cron/check-expiry` - Automated cron job (requires auth)
+- `POST /api/cron/check-expiry` - Manual test of notification system
+- `POST /api/test-email` - Send test email
 
 ## Contributing
 

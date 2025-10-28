@@ -7,6 +7,7 @@ export const config = {
   },
   email: {
     resendApiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.RESEND_FROM || 'ENS Notifier <onboarding@resend.dev>',
   },
   cron: {
     secret: process.env.CRON_SECRET || '',
