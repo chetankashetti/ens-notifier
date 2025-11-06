@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, createConfig } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { config } from '@/lib/config';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Configure wagmi
 const wagmiConfig = createConfig({
@@ -19,9 +19,14 @@ const wagmiConfig = createConfig({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // If no Privy App ID is provided, render children without Privy
-  if (!config.privy.appId) {
+  if (!config.privy.appId || !mounted) {
     return (
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>
