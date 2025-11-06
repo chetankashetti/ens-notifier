@@ -45,10 +45,11 @@ export default function Home() {
                   <h1 className="text-4xl font-bold text-gray-900 mb-4">
                     No Farcaster Wallets Found
                   </h1>
-                  <p className="text-xl text-gray-600">
-                    Open this Mini App from a Farcaster client with connected wallets.
+                  <p className="text-xl text-gray-600 mb-6">
+                    If you are previewing this Mini App outside a Farcaster client, you can manually enter an address below.
                   </p>
                 </div>
+                <AddressVerifier />
               </div>
             )
           ) : authenticated && user?.wallet?.address ? (
