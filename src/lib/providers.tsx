@@ -19,23 +19,6 @@ const wagmiConfig = createConfig({
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // If no Privy App ID is provided, render children without Privy
-  if (!config.privy.appId || !mounted) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>
-          {children}
-        </WagmiProvider>
-      </QueryClientProvider>
-    );
-  }
-
   return (
     <PrivyProvider
       appId={config.privy.appId}
