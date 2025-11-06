@@ -5,9 +5,11 @@ import { EnsTable } from '@/components/EnsTable';
 import { AddressVerifier } from '@/components/AddressVerifier';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePrivy } from '@privy-io/react-auth';
+import { useFarcaster } from '@/hooks/useFarcasterWallets';
 
 export default function Home() {
   const { authenticated, user } = usePrivy();
+  const { isMiniApp, wallets } = useFarcaster();
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,7 +17,41 @@ export default function Home() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          {authenticated && user?.wallet?.address ? (
+          {isMiniApp ? (
+            wallets && wallets.length > 0 ? (
+              <div className="space-y-10">
+                <div className="text-center">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                    Your ENS Domains (Farcaster)
+                  </h1>
+                  <p className="text-xl text-gray-600">
+                    Per-wallet view of your connected Farcaster wallets
+                  </p>
+                </div>
+                {wallets.map((w) => (
+                  <div key={w} className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-semibold text-gray-900">
+                        Wallet {w.slice(0, 6)}...{w.slice(-4)}
+                      </h2>
+                    </div>
+                    <EnsTable address={w} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                    No Farcaster Wallets Found
+                  </h1>
+                  <p className="text-xl text-gray-600">
+                    Open this Mini App from a Farcaster client with connected wallets.
+                  </p>
+                </div>
+              </div>
+            )
+          ) : authenticated && user?.wallet?.address ? (
             <div className="space-y-8">
               <div className="text-center">
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">

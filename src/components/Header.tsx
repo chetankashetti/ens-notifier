@@ -4,9 +4,11 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { config } from '@/lib/config';
+import { useFarcaster } from '@/hooks/useFarcasterWallets';
 
 export function Header() {
   const { login, logout, authenticated, user } = usePrivy();
+  const { isMiniApp, fid } = useFarcaster();
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -23,10 +25,19 @@ export function Header() {
             <Badge variant="secondary" className="text-xs">
               MVP
             </Badge>
+            {isMiniApp && (
+              <Badge variant="outline" className="text-xs">
+                Farcaster Mini App{fid ? ` · fid ${String(fid).slice(0, 6)}` : ''}
+              </Badge>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
-            {!config.privy.appId ? (
+            {isMiniApp ? (
+              <div className="text-sm text-gray-500">
+                Connected via Farcaster
+              </div>
+            ) : !config.privy.appId ? (
               <div className="text-sm text-gray-500">
                 Configure Privy App ID to enable wallet connection
               </div>

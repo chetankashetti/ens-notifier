@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { formatExpiryDate } from '@/lib/ens/lookup';
 import { toast } from 'sonner';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 interface SubscribeModalProps {
   isOpen: boolean;
@@ -35,6 +36,26 @@ export function SubscribeModal({
 }: SubscribeModalProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [fid, setFid] = useState<string | null>(null);
+
+  // Get Farcaster FID if available
+  useEffect(() => {
+    const getFid = async () => {
+      try {
+        const context = await sdk.context;
+        if (context.user?.fid) {
+          setFid(context.user.fid.toString());
+        }
+      } catch (error) {
+        // Not in Farcaster environment or SDK not available
+        console.log('Not in Farcaster Mini App environment');
+      }
+    };
+
+    if (isOpen) {
+      getFid();
+    }
+  }, [isOpen]);
 
   const handleSubscribe = async () => {
     if (!email.trim()) {
@@ -62,6 +83,7 @@ export function SubscribeModal({
           ensName,
           expiryDate: new Date(expiryDate * 1000).toISOString(),
           email: email.trim(),
+          fid: fid, // Include Farcaster FID if available
         }),
       });
 

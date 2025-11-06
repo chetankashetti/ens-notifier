@@ -114,8 +114,48 @@ src/
 - [x] Test endpoints for email functionality
 - [x] Graceful handling of missing API keys (simulation mode)
 
+### ✅ Milestone 5: Farcaster Mini App Integration
+- [x] Farcaster Mini App SDK integration
+- [x] SDK provider for app initialization
+- [x] FID (Farcaster ID) integration for users
+- [x] Mini App manifest configuration
+- [x] Seamless web and Mini App support
+
 ### 🚧 Upcoming Milestones
-- [ ] Farcaster Mini App support
+- [ ] Additional UI polish and enhancements
+
+## Farcaster Mini App
+
+This app can be used as a [Farcaster Mini App](https://miniapps.farcaster.xyz/), allowing users to:
+- Access the app directly from Farcaster clients like Warpcast
+- Authenticate using their Farcaster account
+- Receive notifications through Farcaster channels
+- Share their ENS domain management activities
+
+### Getting Started with Farcaster
+
+1. **Enable Developer Mode** (if not already enabled):
+   - Visit [Farcaster Settings](https://farcaster.xyz/~/settings/developer-tools)
+   - Toggle on "Developer Mode"
+
+2. **Install Dependencies** (already installed):
+   ```bash
+   npm install @farcaster/miniapp-sdk
+   ```
+
+3. **Configure Mini App**:
+   - Edit `miniapp.json` with your app details
+   - Update `appUrl` to your deployment URL
+   - Customize icon, splash screen, and metadata
+
+4. **Test Locally**:
+   - Run `npm run dev`
+   - Use Farcaster's developer tools to preview the app
+
+5. **Deploy and Share**:
+   - Deploy to Vercel or your preferred hosting
+   - Share your app using the Mini App URL format
+   - Users can open it directly in Farcaster clients
 
 ## API Endpoints
 

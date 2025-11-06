@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExpiringDomains, markAsNotified } from '@/lib/database';
 import { sendEnsExpiryEmail } from '@/lib/email/resend';
 import { config } from '@/lib/config';
+import { User, EnsRecord } from '@/generated/prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     console.log('Starting cron job: Checking expiring ENS domains...');
 
     // Get domains expiring in the next 30 days
-    const expiringDomains = await getExpiringDomains(30);
+    const expiringDomains: Array<EnsRecord & { user: User }> = await getExpiringDomains(30);
     
     if (expiringDomains.length === 0) {
       console.log('No expiring domains found');
@@ -47,13 +48,13 @@ export async function GET(request: NextRequest) {
         (record.expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       );
 
-      // Skip if no user contact info
-      if (!record.userId) {
-        console.warn(`No user ID for record ${record.id}`);
+      // Skip if no user contact info or email
+      if (!record.user?.email) {
+        console.warn(`No user email for record ${record.id}`);
         continue;
       }
 
-      const userKey = record.userId;
+      const userKey = record.user.email;
 
       if (!userDomains.has(userKey)) {
         userDomains.set(userKey, []);

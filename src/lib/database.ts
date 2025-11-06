@@ -82,7 +82,7 @@ export async function getUserEnsRecords(userId: string): Promise<EnsRecord[]> {
   });
 }
 
-export async function getExpiringDomains(daysThreshold: number = 30): Promise<EnsRecord[]> {
+export async function getExpiringDomains(daysThreshold: number = 30): Promise<Array<EnsRecord & { user: User }>> {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
 

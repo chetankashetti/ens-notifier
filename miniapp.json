@@ -1,0 +1,23 @@
+{
+  "name": "ENS Expiry Notifier",
+  "version": "0.1.0",
+  "description": "Get notified when your ENS domains are about to expire",
+  "icon": "/icon.png",
+  "splash": {
+    "image": "/splash.png",
+    "backgroundColor": "#ffffff"
+  },
+  "appUrl": "https://ensnotifier.vercel.app",
+  "appId": "ens-notifier",
+  "author": {
+    "name": "ENS Notifier Team",
+    "url": "https://github.com/yourusername/ens-notifier"
+  },
+  "homeUrl": "https://ensnotifier.vercel.app",
+  "chains": ["eip155:1"],
+  "features": {
+    "wallet": true,
+    "notifications": true,
+    "casts": false
+  }
+}
