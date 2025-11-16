@@ -21,6 +21,28 @@ export function FarcasterSDKProvider({ children }: { children: React.ReactNode }
   const [wallets, setWallets] = useState<string[]>([]);
 
   const initializeSDK = useCallback(async () => {
+    // Mock mode for local development/testing
+    const MOCK_MODE = 
+      typeof window !== 'undefined' && 
+      (window.location.search.includes('mock=true') || 
+       process.env.NEXT_PUBLIC_MOCK_FARCASTER === 'true');
+    
+    if (MOCK_MODE) {
+      console.log('[Farcaster SDK] 🧪 Mock mode enabled for local testing');
+      setIsMiniApp(true);
+      // Use mock FID and addresses from URL params or defaults
+      const urlParams = new URLSearchParams(window.location.search);
+      const mockFid = urlParams.get('mockFid') || '1234';
+      const mockAddresses = urlParams.get('mockAddresses')?.split(',') || [
+        '0xd8da6bf26964af9d7eed9e03e53415d37aa96045', // vitalik.eth
+      ];
+      
+      setFid(mockFid);
+      setWallets(mockAddresses.map(addr => addr.toLowerCase().trim()));
+      console.log('[Farcaster SDK] 🧪 Mock data set - FID:', mockFid, 'Addresses:', mockAddresses);
+      return;
+    }
+
     try {
       // Indicates Mini App environment and hides splash when ready
       await sdk.actions.ready();
@@ -33,97 +55,107 @@ export function FarcasterSDKProvider({ children }: { children: React.ReactNode }
       return;
     }
 
-    // Best-effort: fetch fid and connected wallets; tolerate SDK differences
+    // Fetch fid and connected wallets using the correct SDK API
     try {
-      // Attempt common identity retrievals
+      // Get FID from context
       let fetchedFid: string | undefined = undefined;
       try {
-        // @ts-expect-error - SDK typings may vary
-        fetchedFid = await sdk?.actions?.getFid?.();
+        const context = await sdk.context;
+        fetchedFid = context.user.fid.toString();
         if (fetchedFid) {
-          console.log('[Farcaster SDK] ✅ FID fetched via actions.getFid():', fetchedFid);
+          console.log('[Farcaster SDK] ✅ FID fetched from context:', fetchedFid);
+          setFid(fetchedFid);
         }
       } catch (err) {
-        console.log('[Farcaster SDK] ⚠️ actions.getFid() failed:', err);
-      }
-      if (!fetchedFid) {
-        try {
-          // @ts-expect-error - alternate API surface
-          const user = await sdk?.context?.user?.get?.();
-          fetchedFid = user?.fid?.toString();
-          if (fetchedFid) {
-            console.log('[Farcaster SDK] ✅ FID fetched via context.user.get():', fetchedFid);
-          }
-        } catch (err) {
-          console.log('[Farcaster SDK] ⚠️ context.user.get() failed:', err);
-        }
-      }
-      if (fetchedFid) {
-        setFid(fetchedFid);
-        console.log('[Farcaster SDK] ✅ Authenticated with FID:', fetchedFid);
-      } else {
-        console.log('[Farcaster SDK] ⚠️ No FID found - user may not be authenticated');
+        console.log('[Farcaster SDK] ⚠️ Failed to get FID from context:', err);
       }
 
-      // Attempt to fetch connected wallets
-      let fetchedWallets: string[] | undefined = undefined;
-      try {
-        // @ts-expect-error - hypothetical API
-        fetchedWallets = await sdk?.actions?.getConnectedWallets?.();
-        if (Array.isArray(fetchedWallets) && fetchedWallets.length > 0) {
-          console.log('[Farcaster SDK] ✅ Wallets fetched via actions.getConnectedWallets():', fetchedWallets);
-        }
-      } catch (err) {
-        console.log('[Farcaster SDK] ⚠️ actions.getConnectedWallets() failed:', err);
-      }
-      if (!Array.isArray(fetchedWallets)) {
+      // Fetch connected addresses from Neynar API using FID
+      let fetchedWallets: string[] = [];
+      if (fetchedFid) {
         try {
-          // @ts-expect-error - alternate API shape
-          const res = await sdk?.context?.wallets?.get?.();
-          if (Array.isArray(res)) {
-            fetchedWallets = res as string[];
-            console.log('[Farcaster SDK] ✅ Wallets fetched via context.wallets.get() (array):', fetchedWallets);
-          } else if (Array.isArray(res?.wallets)) {
-            fetchedWallets = res.wallets as string[];
-            console.log('[Farcaster SDK] ✅ Wallets fetched via context.wallets.get() (object):', fetchedWallets);
+          console.log('[Farcaster SDK] Fetching connected addresses from Neynar for FID:', fetchedFid);
+          const response = await fetch(`/api/farcaster/connected-addresses?fid=${fetchedFid}`);
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data.addresses) && data.addresses.length > 0) {
+              fetchedWallets = data.addresses;
+              console.log('[Farcaster SDK] ✅ Connected addresses fetched from Neynar:', fetchedWallets);
+            } else {
+              console.log('[Farcaster SDK] ⚠️ No connected addresses found for FID:', fetchedFid);
+            }
+          } else {
+            console.error('[Farcaster SDK] ⚠️ Failed to fetch connected addresses:', response.statusText);
           }
         } catch (err) {
-          console.log('[Farcaster SDK] ⚠️ context.wallets.get() failed:', err);
+          console.error('[Farcaster SDK] ⚠️ Error fetching connected addresses from Neynar:', err);
         }
       }
-      // If nothing returned, proactively request in preview/client
-      if (!Array.isArray(fetchedWallets) || fetchedWallets.length === 0) {
-        console.log('[Farcaster SDK] ⚠️ No wallets found, attempting to request...');
+
+      // Fallback: Try to get wallets from Ethereum provider if Neynar didn't return any
+      if (fetchedWallets.length === 0) {
+        console.log('[Farcaster SDK] No addresses from Neynar, trying Ethereum provider as fallback...');
         try {
-          // @ts-expect-error - request API may exist
-          const req = await sdk?.context?.wallets?.request?.();
-          if (Array.isArray(req)) {
-            fetchedWallets = req as string[];
-            console.log('[Farcaster SDK] ✅ Wallets requested via context.wallets.request() (array):', fetchedWallets);
-          } else if (Array.isArray(req?.wallets)) {
-            fetchedWallets = req.wallets as string[];
-            console.log('[Farcaster SDK] ✅ Wallets requested via context.wallets.request() (object):', fetchedWallets);
+          // Try to get the Ethereum provider
+          const provider = await sdk.wallet.getEthereumProvider();
+          if (provider) {
+            // Request accounts from the provider
+            try {
+              const accounts = await provider.request({ method: 'eth_requestAccounts' });
+              if (Array.isArray(accounts) && accounts.length > 0) {
+                fetchedWallets = accounts as string[];
+                console.log('[Farcaster SDK] ✅ Wallets fetched via eth_requestAccounts:', fetchedWallets);
+              }
+            } catch (err) {
+              // If request fails, try eth_accounts (doesn't require user approval)
+              console.log('[Farcaster SDK] ⚠️ eth_requestAccounts failed, trying eth_accounts:', err);
+              try {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (Array.isArray(accounts) && accounts.length > 0) {
+                  fetchedWallets = accounts as string[];
+                  console.log('[Farcaster SDK] ✅ Wallets fetched via eth_accounts:', fetchedWallets);
+                }
+              } catch (err2) {
+                console.log('[Farcaster SDK] ⚠️ eth_accounts also failed:', err2);
+              }
+            }
+          } else {
+            console.log('[Farcaster SDK] ⚠️ No Ethereum provider available');
           }
         } catch (err) {
-          console.log('[Farcaster SDK] ⚠️ context.wallets.request() failed:', err);
+          console.log('[Farcaster SDK] ⚠️ Failed to get Ethereum provider:', err);
         }
-        if (!Array.isArray(fetchedWallets) || fetchedWallets.length === 0) {
+
+        // If no wallets found via provider, try the direct ethProvider property
+        if (fetchedWallets.length === 0) {
           try {
-            // @ts-expect-error - alternate request action
-            const req2 = await sdk?.actions?.requestWallets?.();
-            if (Array.isArray(req2)) {
-              fetchedWallets = req2 as string[];
-              console.log('[Farcaster SDK] ✅ Wallets requested via actions.requestWallets() (array):', fetchedWallets);
-            } else if (Array.isArray(req2?.wallets)) {
-              fetchedWallets = req2.wallets as string[];
-              console.log('[Farcaster SDK] ✅ Wallets requested via actions.requestWallets() (object):', fetchedWallets);
+            const provider = sdk.wallet.ethProvider;
+            if (provider) {
+              try {
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                if (Array.isArray(accounts) && accounts.length > 0) {
+                  fetchedWallets = accounts as string[];
+                  console.log('[Farcaster SDK] ✅ Wallets fetched via ethProvider.eth_requestAccounts:', fetchedWallets);
+                }
+              } catch (err) {
+                try {
+                  const accounts = await provider.request({ method: 'eth_accounts' });
+                  if (Array.isArray(accounts) && accounts.length > 0) {
+                    fetchedWallets = accounts as string[];
+                    console.log('[Farcaster SDK] ✅ Wallets fetched via ethProvider.eth_accounts:', fetchedWallets);
+                  }
+                } catch (err2) {
+                  console.log('[Farcaster SDK] ⚠️ ethProvider methods failed:', err2);
+                }
+              }
             }
           } catch (err) {
-            console.log('[Farcaster SDK] ⚠️ actions.requestWallets() failed:', err);
+            console.log('[Farcaster SDK] ⚠️ Failed to access ethProvider:', err);
           }
         }
       }
-      if (Array.isArray(fetchedWallets) && fetchedWallets.length > 0) {
+
+      if (fetchedWallets.length > 0) {
         // Normalize to lowercase; checksum will be applied by consumers if needed
         const normalizedWallets = Array.from(new Set(fetchedWallets.map((w) => String(w).toLowerCase())));
         setWallets(normalizedWallets);
@@ -140,33 +172,53 @@ export function FarcasterSDKProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     void initializeSDK();
-    // Subscribe to wallet changes if supported
-    // @ts-expect-error - optional event API surface
-    const unsubscribe = sdk?.context?.wallets?.onChange?.((next: unknown) => {
+    
+    // Subscribe to wallet/account changes via Ethereum provider
+    let provider: any = null;
+    let accountChangeHandler: ((accounts: string[]) => void) | null = null;
+    let isMounted = true;
+    
+    const setupWalletListener = async () => {
       try {
-        console.log('[Farcaster SDK] 🔔 Wallet change event received:', next);
-        const arr = Array.isArray(next)
-          ? (next as unknown[])
-          : Array.isArray((next as any)?.wallets)
-          ? ((next as any).wallets as unknown[])
-          : [];
-        if (arr.length > 0) {
-          const normalizedWallets = Array.from(new Set(arr.map((w) => String(w).toLowerCase())));
-          setWallets(normalizedWallets);
-          console.log('[Farcaster SDK] ✅ Wallets updated from onChange event:', normalizedWallets);
+        provider = await sdk.wallet.getEthereumProvider();
+        if (!provider && sdk.wallet.ethProvider) {
+          provider = sdk.wallet.ethProvider;
+        }
+        
+        if (provider && typeof provider.on === 'function' && isMounted) {
+          accountChangeHandler = (accounts: string[]) => {
+            if (!isMounted) return;
+            try {
+              console.log('[Farcaster SDK] 🔔 Account change event received:', accounts);
+              if (Array.isArray(accounts) && accounts.length > 0) {
+                const normalizedWallets = Array.from(new Set(accounts.map((w) => String(w).toLowerCase())));
+                setWallets(normalizedWallets);
+                console.log('[Farcaster SDK] ✅ Wallets updated from account change event:', normalizedWallets);
+              } else {
+                setWallets([]);
+                console.log('[Farcaster SDK] ⚠️ No accounts in change event');
+              }
+            } catch (err) {
+              console.error('[Farcaster SDK] ❌ Error handling account change event:', err);
+            }
+          };
+          
+          provider.on('accountsChanged', accountChangeHandler);
+          console.log('[Farcaster SDK] ✅ Subscribed to account change events');
         }
       } catch (err) {
-        console.error('[Farcaster SDK] ❌ Error handling wallet change event:', err);
+        console.log('[Farcaster SDK] ⚠️ Failed to setup wallet listener:', err);
       }
-    });
-    if (unsubscribe) {
-      console.log('[Farcaster SDK] ✅ Subscribed to wallet change events');
-    }
+    };
+    
+    void setupWalletListener();
+    
     return () => {
+      isMounted = false;
       try {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-          console.log('[Farcaster SDK] 🔌 Unsubscribed from wallet change events');
+        if (provider && accountChangeHandler && typeof provider.removeListener === 'function') {
+          provider.removeListener('accountsChanged', accountChangeHandler);
+          console.log('[Farcaster SDK] 🔌 Unsubscribed from account change events');
         }
       } catch {}
     };

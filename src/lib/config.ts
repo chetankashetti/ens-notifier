@@ -17,4 +17,7 @@ export const config = {
   cron: {
     secret: process.env.CRON_SECRET || '',
   },
+  neynar: {
+    apiKey: process.env.NEYNAR_API_KEY || '',
+  },
 } as const;
