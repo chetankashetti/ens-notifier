@@ -29,7 +29,7 @@ export function EnsExpiryEmail({ userName, domains }: EnsExpiryEmailProps) {
       <Body style={main}>
         <Container style={container}>
           <Section style={logoContainer}>
-            <Heading style={logo}>ENS Expiry Notifier</Heading>
+            <Heading style={logo}>KeepENS</Heading>
           </Section>
 
           <Heading style={h1}>⚠️ Your ENS Domains Are Expiring Soon</Heading>
@@ -39,7 +39,7 @@ export function EnsExpiryEmail({ userName, domains }: EnsExpiryEmailProps) {
           </Text>
 
           <Text style={text}>
-            We wanted to let you know that {domains.length === 1 ? 'your ENS domain' : 'some of your ENS domains'} 
+            We wanted to let you know that {domains.length === 1 ? 'your ENS domain' : 'some of your ENS domains'}
             {domains.length === 1 ? ' is' : ' are'} expiring soon and may need your attention.
           </Text>
 
@@ -64,18 +64,18 @@ export function EnsExpiryEmail({ userName, domains }: EnsExpiryEmailProps) {
           </Section>
 
           <Text style={text}>
-            Don't lose your valuable ENS domains! Click the "Renew Domain" button above 
+            Don't lose your valuable ENS domains! Click the "Renew Domain" button above
             to extend your registration.
           </Text>
 
           <Text style={text}>
-            If you no longer wish to receive these notifications, you can unsubscribe 
+            If you no longer wish to receive these notifications, you can unsubscribe
             by visiting our website and managing your subscriptions.
           </Text>
 
           <Section style={footer}>
             <Text style={footerText}>
-              This email was sent by ENS Expiry Notifier. 
+              This email was sent by KeepENS.
               We're here to help you keep track of your ENS domains.
             </Text>
           </Section>

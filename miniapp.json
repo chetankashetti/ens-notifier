@@ -1,7 +1,7 @@
 {
-  "name": "ENS Expiry Notifier",
+  "name": "KeepENS",
   "version": "0.1.0",
-  "description": "Get notified when your ENS domains are about to expire",
+  "description": "Secure your digital legacy. Never lose an ENS domain again.",
   "icon": "/icon.png",
   "splash": {
     "image": "/splash.png",
@@ -14,7 +14,9 @@
     "url": "https://github.com/yourusername/ens-notifier"
   },
   "homeUrl": "https://ensnotifier.vercel.app",
-  "chains": ["eip155:1"],
+  "chains": [
+    "eip155:1"
+  ],
   "features": {
     "wallet": true,
     "notifications": true,

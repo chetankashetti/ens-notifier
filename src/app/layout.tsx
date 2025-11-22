@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ENS Expiry Notifier",
-  description: "Get notified when your ENS domains are about to expire",
+  title: "KeepENS",
+  description: "Secure your digital legacy. Never lose an ENS domain again.",
 };
 
 export default function RootLayout({

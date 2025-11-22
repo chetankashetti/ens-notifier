@@ -15,43 +15,39 @@ export function Header() {
   };
 
   return (
-    <header className="border-b bg-white">
+    <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              ENS Expiry Notifier
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
+          <div className="flex items-center space-x-3">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              KeepENS
             </h1>
-            <Badge variant="secondary" className="text-xs">
-              MVP
-            </Badge>
             {isMiniApp && (
-              <Badge variant="outline" className="text-xs">
-                Farcaster Mini App{fid ? ` · fid ${String(fid).slice(0, 6)}` : ''}
+              <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                Mini App{fid ? ` · ${String(fid).slice(0, 6)}` : ''}
               </Badge>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {isMiniApp ? (
-              <div className="text-sm text-gray-500">
-                Connected via Farcaster
-              </div>
+              // Minimal header for Mini App - wallet is handled by context
+              null
             ) : !config.privy.appId ? (
-              <div className="text-sm text-gray-500">
-                Configure Privy App ID to enable wallet connection
+              <div className="text-sm text-gray-500 text-center sm:text-left">
+                Configure Privy App ID
               </div>
             ) : authenticated && user?.wallet?.address ? (
               <div className="flex items-center space-x-3">
-                <div className="text-sm text-gray-600">
-                  Welcome, {formatAddress(user.wallet.address)}
+                <div className="text-sm text-gray-600 hidden sm:block">
+                  {formatAddress(user.wallet.address)}
                 </div>
                 <Button variant="outline" size="sm" onClick={logout}>
                   Disconnect
                 </Button>
               </div>
             ) : (
-              <Button onClick={login}>
+              <Button onClick={login} className="w-full sm:w-auto">
                 Connect Wallet
               </Button>
             )}
