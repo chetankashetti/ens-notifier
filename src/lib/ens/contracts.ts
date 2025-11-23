@@ -2,15 +2,20 @@
 export const ENS_CONTRACTS = {
   // Base Registrar Contract (for .eth domains)
   BASE_REGISTRAR: '0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85',
-  
+
   // ETH Registrar Controller (for registration/renewal)
   ETH_REGISTRAR_CONTROLLER: '0x253553366Da8546fC250F225fe3d25d0C782303b',
-  
+
   // NameWrapper Contract (for wrapped domains)
   NAME_WRAPPER: '0x114D4603199df73c7d5987874E719Ac643735B6',
-  
+
   // ENS Registry
   ENS_REGISTRY: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
+
+  // Base L2 Contracts
+  BASE_L2_RESOLVER: '0xC6d566A56A1aFf6508b41f6c90ff131615583BCD',
+  BASE_L2_REGISTRAR: '0x03c4738ee98ae44591e1a4a4f3cab6641d95dd9a', // ERC-721 Token
+  BASE_L2_REGISTRAR_CONTROLLER: '0x4cCb0BB02FCABA27e82a56646E81d8c5bC4119a5',
 } as const;
 
 // Base Registrar ABI - minimal functions we need

@@ -8,6 +8,7 @@ export interface EnsDomain {
   daysLeft: number;
   status: 'active' | 'expired' | 'expiring-soon' | 'expiring-very-soon';
   isWrapped: boolean;
+  type: 'ens' | 'basename';
 }
 
 // ENS Status based on days left

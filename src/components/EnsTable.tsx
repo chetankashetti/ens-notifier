@@ -119,7 +119,11 @@ export function EnsTable({ address }: EnsTableProps) {
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-2">
                         <span>{domain.name}</span>
-                        {domain.isWrapped && (
+                        {domain.type === 'basename' ? (
+                          <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                            Basename
+                          </Badge>
+                        ) : domain.isWrapped && (
                           <Badge variant="outline" className="text-xs">
                             Wrapped
                           </Badge>
@@ -139,15 +143,15 @@ export function EnsTable({ address }: EnsTableProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleSubscribe(domain.name, domain.expiryDate)}
                         >
                           Notify Me
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleRenew(domain.name)}
                         >

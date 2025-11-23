@@ -1,13 +1,20 @@
 import { createPublicClient, http, parseAbi } from 'viem';
-import { mainnet } from 'viem/chains';
+import { mainnet, base } from 'viem/chains';
 import { keccak256, toHex } from 'viem';
 import { ENS_CONTRACTS, BASE_REGISTRAR_ABI, NAME_WRAPPER_ABI } from './contracts';
 import { fetchDomainsFromGraph } from './graph';
+import { fetchBasenamesFromGraph } from './basenames';
 import { EnsDomain, ContractDomainData } from '@/types/ens';
 
 // Create viem client for mainnet
 const client = createPublicClient({
   chain: mainnet,
+  transport: http(),
+});
+
+// Create viem client for base
+const baseClient = createPublicClient({
+  chain: base,
   transport: http(),
 });
 
@@ -26,10 +33,20 @@ function getStatus(daysLeft: number): EnsDomain['status'] {
   return 'active';
 }
 
-// Get expiry date from contract
-async function getExpiryFromContract(labelHash: string, isWrapped: boolean = false): Promise<number> {
+// Get expiry from contract
+async function getExpiryFromContract(labelHash: string, isWrapped: boolean = false, isBasename: boolean = false): Promise<number> {
   try {
-    if (isWrapped) {
+    if (isBasename) {
+      // For Basenames, use Base L2 Registrar
+      // Note: We assume Base Registrar has nameExpires. If not, we might need to rely on subgraph.
+      const expiry = await baseClient.readContract({
+        address: ENS_CONTRACTS.BASE_L2_REGISTRAR as `0x${string}`,
+        abi: BASE_REGISTRAR_ABI,
+        functionName: 'nameExpires',
+        args: [BigInt(labelHash)],
+      });
+      return Number(expiry);
+    } else if (isWrapped) {
       // For wrapped domains, use NameWrapper contract
       const data = await client.readContract({
         address: ENS_CONTRACTS.NAME_WRAPPER as `0x${string}`,
@@ -37,7 +54,7 @@ async function getExpiryFromContract(labelHash: string, isWrapped: boolean = fal
         functionName: 'getData',
         args: [BigInt(labelHash)],
       });
-      
+
       // NameWrapper returns expiry as uint64
       return Number(data[2]); // expiry is the third element
     } else {
@@ -48,11 +65,11 @@ async function getExpiryFromContract(labelHash: string, isWrapped: boolean = fal
         functionName: 'nameExpires',
         args: [BigInt(labelHash)],
       });
-      
+
       return Number(expiry);
     }
   } catch (error) {
-    console.error(`Error fetching expiry for labelHash ${labelHash}:`, error);
+    console.error(`Error fetching expiry for labelHash ${labelHash} (isBasename: ${isBasename}):`, error);
     throw error;
   }
 }
@@ -65,34 +82,54 @@ function labelToHash(label: string): string {
 // Main function to get ENS domains for an address
 export async function getEnsDomains(address: string): Promise<EnsDomain[]> {
   try {
-    // 1. Fetch domains from The Graph
-    const graphDomains = await fetchDomainsFromGraph(address);
-    
-    if (graphDomains.length === 0) {
+    // 1. Fetch domains from The Graph (Mainnet)
+    const graphDomainsPromise = fetchDomainsFromGraph(address);
+
+    // 2. Fetch Basenames from ENSNode (Base)
+    const basenamesPromise = fetchBasenamesFromGraph(address);
+
+    const [graphDomains, basenames] = await Promise.all([graphDomainsPromise, basenamesPromise]);
+
+    const allGraphDomains = [
+      ...graphDomains.map(d => ({ ...d, type: 'ens' as const })),
+      ...basenames.map(d => ({ ...d, type: 'basename' as const }))
+    ];
+
+    if (allGraphDomains.length === 0) {
       return [];
     }
 
-    // 2. Process each domain and get on-chain expiry data
+    // 3. Process each domain and get on-chain expiry data
     const processedDomains: EnsDomain[] = [];
-    
-    for (const domain of graphDomains) {
+
+    for (const domain of allGraphDomains) {
       try {
         // Skip if no labelName (shouldn't happen but safety check)
         if (!domain.labelName) continue;
-        
-        // Check if domain is wrapped by checking owner
-        const isWrapped = domain.owner.id.toLowerCase() === ENS_CONTRACTS.NAME_WRAPPER.toLowerCase();
-        
+
+        const isBasename = domain.type === 'basename';
+
+        // Check if domain is wrapped by checking owner (only for ENS)
+        const isWrapped = !isBasename && domain.owner.id.toLowerCase() === ENS_CONTRACTS.NAME_WRAPPER.toLowerCase();
+
         // Get expiry from contract
         const labelHash = labelToHash(domain.labelName);
-        const expiryTimestamp = await getExpiryFromContract(labelHash, isWrapped);
-        
+        let expiryTimestamp: number;
+
+        try {
+          expiryTimestamp = await getExpiryFromContract(labelHash, isWrapped, isBasename);
+        } catch (err) {
+          // Fallback to subgraph expiry if contract call fails
+          console.warn(`Contract call failed for ${domain.name}, using subgraph expiry`);
+          expiryTimestamp = domain.expiryDate ? Number(domain.expiryDate) : 0;
+        }
+
         // Calculate days left
         const daysLeft = calculateDaysLeft(expiryTimestamp);
-        
+
         // Create domain object
         const ensDomain: EnsDomain = {
-          id: domain.id,
+          id: domain.id || `${domain.labelName}-${domain.type}`, // Basenames might not have ID in same format
           name: domain.name,
           labelName: domain.labelName,
           expiryDate: expiryTimestamp,
@@ -100,18 +137,19 @@ export async function getEnsDomains(address: string): Promise<EnsDomain[]> {
           daysLeft,
           status: getStatus(daysLeft),
           isWrapped,
+          type: domain.type,
         };
-        
+
         processedDomains.push(ensDomain);
       } catch (error) {
         console.error(`Error processing domain ${domain.name}:`, error);
         // Continue with other domains even if one fails
       }
     }
-    
-    // 3. Sort by expiry date (soonest first)
+
+    // 4. Sort by expiry date (soonest first)
     processedDomains.sort((a, b) => a.expiryDate - b.expiryDate);
-    
+
     return processedDomains;
   } catch (error) {
     console.error('Error in getEnsDomains:', error);
