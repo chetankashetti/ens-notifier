@@ -4,7 +4,7 @@ import { findOrCreateUser, subscribeToEnsDomain, unsubscribeFromEnsDomain, getUs
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { walletAddress, ensName, expiryDate, email, fid } = body;
+    const { walletAddress, ensName, expiryDate, email, fid, type } = body;
 
     if (!walletAddress || !ensName || !expiryDate) {
       return NextResponse.json(
@@ -30,8 +30,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in subscribe API:', error);
+
+    // Determine domain type label for error message
+    const body = await request.clone().json().catch(() => ({}));
+    const typeLabel = body.type === 'basename' ? 'Basename' : 'ENS domain';
+
     return NextResponse.json(
-      { error: 'Failed to subscribe to ENS domain' },
+      { error: `Failed to subscribe to ${typeLabel}` },
       { status: 500 }
     );
   }
@@ -52,7 +57,7 @@ export async function DELETE(request: NextRequest) {
 
     // Find user
     const user = await findOrCreateUser(walletAddress);
-    
+
     // Unsubscribe from ENS domain
     await unsubscribeFromEnsDomain(user.id, ensName);
 
@@ -83,7 +88,7 @@ export async function GET(request: NextRequest) {
 
     // Find user
     const user = await findOrCreateUser(walletAddress);
-    
+
     // Get user's ENS records
     const records = await getUserEnsRecords(user.id);
 

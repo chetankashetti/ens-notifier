@@ -21,22 +21,29 @@ export function EnsTable({ address }: EnsTableProps) {
     isOpen: boolean;
     ensName: string;
     expiryDate: number;
+    type: 'ens' | 'basename';
   }>({
     isOpen: false,
     ensName: '',
     expiryDate: 0,
+    type: 'ens',
   });
 
-  const handleSubscribe = (ensName: string, expiryDate: number) => {
+  const handleSubscribe = (ensName: string, expiryDate: number, type: 'ens' | 'basename') => {
     setSubscribeModal({
       isOpen: true,
       ensName,
       expiryDate,
+      type,
     });
   };
 
-  const handleRenew = (ensName: string) => {
-    window.open(`https://app.ens.domains/name/${ensName}/register`, '_blank');
+  const handleRenew = (ensName: string, type: 'ens' | 'basename') => {
+    if (type === 'basename') {
+      window.open('https://www.base.org/names', '_blank');
+    } else {
+      window.open(`https://app.ens.domains/name/${ensName}/register`, '_blank');
+    }
   };
 
   const handleSubscribeSuccess = () => {
@@ -146,14 +153,14 @@ export function EnsTable({ address }: EnsTableProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleSubscribe(domain.name, domain.expiryDate)}
+                          onClick={() => handleSubscribe(domain.name, domain.expiryDate, domain.type)}
                         >
                           Notify Me
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleRenew(domain.name)}
+                          onClick={() => handleRenew(domain.name, domain.type)}
                         >
                           Renew
                         </Button>
@@ -169,11 +176,12 @@ export function EnsTable({ address }: EnsTableProps) {
 
       <SubscribeModal
         isOpen={subscribeModal.isOpen}
-        onClose={() => setSubscribeModal({ isOpen: false, ensName: '', expiryDate: 0 })}
+        onClose={() => setSubscribeModal({ isOpen: false, ensName: '', expiryDate: 0, type: 'ens' })}
         ensName={subscribeModal.ensName}
         expiryDate={subscribeModal.expiryDate}
         walletAddress={address}
         onSubscribe={handleSubscribeSuccess}
+        type={subscribeModal.type}
       />
     </>
   );

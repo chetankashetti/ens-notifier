@@ -24,6 +24,7 @@ interface SubscribeModalProps {
   expiryDate: number;
   walletAddress: string;
   onSubscribe: () => void;
+  type: 'ens' | 'basename';
 }
 
 export function SubscribeModal({
@@ -33,6 +34,7 @@ export function SubscribeModal({
   expiryDate,
   walletAddress,
   onSubscribe,
+  type,
 }: SubscribeModalProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +86,7 @@ export function SubscribeModal({
           expiryDate: new Date(expiryDate * 1000).toISOString(),
           email: email.trim(),
           fid: fid, // Include Farcaster FID if available
+          type, // Pass domain type to API
         }),
       });
 
@@ -123,7 +126,7 @@ export function SubscribeModal({
             </Badge>
           </DialogTitle>
           <DialogDescription>
-            Get email reminders before your ENS domain expires
+            Get email reminders before your {type === 'basename' ? 'Basename' : 'ENS domain'} expires
           </DialogDescription>
         </DialogHeader>
 
