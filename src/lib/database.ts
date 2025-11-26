@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { User, EnsRecord } from '@prisma/client';
+import { User, EnsRecord } from '@/generated/client';
 
 // User management functions
 export async function findOrCreateUser(walletAddress: string, email?: string, fid?: string): Promise<User> {
