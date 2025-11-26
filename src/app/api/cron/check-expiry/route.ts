@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExpiringDomains, markAsNotified } from '@/lib/database';
 import { sendEnsExpiryEmail } from '@/lib/email/resend';
 import { config } from '@/lib/config';
-import { User, EnsRecord } from '@/generated/prisma/client';
+import { User, EnsRecord } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
     // Verify cron secret for security
     const authHeader = request.headers.get('authorization');
     const expectedAuth = `Bearer ${config.cron.secret}`;
-    
+
     if (!config.cron.secret || authHeader !== expectedAuth) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Get domains expiring in the next 30 days
     const expiringDomains: Array<EnsRecord & { user: User }> = await getExpiringDomains(30);
-    
+
     if (expiringDomains.length === 0) {
       console.log('No expiring domains found');
       return NextResponse.json({
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
       try {
         console.log(`Sending email to ${userEmail} for ${domains.length} domains`);
-        
+
         const result = await sendEnsExpiryEmail(
           userEmail,
           domains.map(d => ({
@@ -131,8 +131,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in cron job:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Cron job failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
 
     // Get expiring domains
     const expiringDomains = await getExpiringDomains(daysThreshold);
-    
+
     if (expiringDomains.length === 0) {
       return NextResponse.json({
         success: true,
@@ -193,8 +193,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in manual test:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Test failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
